@@ -9,8 +9,24 @@ app.all("/", (req, res) => {
   res.send("This is my server!");
 });
 
-app.get('/books',(req,res)=>{
-    res.json(books);
+app.get('/books', (req, res) => {
+  let results = books;  
+  const { name, limit = 2, page = 1 } = req.query;  
+
+  if (name) {
+    const search = name.toLowerCase();
+    results = results.filter(b => b.name.toLowerCase().includes(search));
+  } 
+  const start = (page - 1) * limit; 
+  const end = start + (+limit);  
+  const paginated = results.slice(start, end); 
+
+  res.json({
+    total: results.length,
+    page: (+page),
+    limit: (+limit),
+    results: paginated
+  });
 });
 
 app.get("/books/:id", (req, res) => {
