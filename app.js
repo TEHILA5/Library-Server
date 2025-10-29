@@ -54,7 +54,7 @@ app.patch("/books/:id/borrow", (req, res) => {
   const book = books.find(b => b.id == req.params.id); 
   if (!book) return res.status(404).send("There is no such a book!");
   if (book.isBorrowed) return console.log("The book is already borrowed!");
-  const { userId } = req.params.userId;
+  const { userId } = req.body; 
   book.isBorrowed = true;
   book.borrows.push({ date: new Date().toISOString(), userId });
   res.json(book);
@@ -69,7 +69,7 @@ app.patch("/books/:id/return", (req, res) => {
 
 app.delete("/books/:id", (req, res) => {
   const index = books.findIndex(b => b.id == req.params.id);
-  if (!book) return res.status(404).send("There is no such a book!");
+  if (!index) return res.status(404).send("There is no such a book!");
   books.splice(index, 1);
   res.send("deleting success!");
 });
