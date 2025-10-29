@@ -21,7 +21,7 @@ export const books = [
     name:"Gam Ki Elech",
     category:"Emotion",
     price:100,
-    isBorrowed:true,
+    isBorrowed:false,
     borrows:[
         {date:"2025-09-30",userId:100},
         {date:"2025-10-25",userId:102},
