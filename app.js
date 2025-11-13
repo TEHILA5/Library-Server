@@ -1,12 +1,19 @@
-import express from 'express'
+import express from 'express';
 import dotenv from "dotenv";
-import bookRoutes from './routes/book.route.js'
-import userRoutes from './routes/user.route.js'
+import bookRoutes from './routes/book.route.js';
+import userRoutes from './routes/user.route.js';
+import {addCurrentDate} from'./middlewares/date.Middleware.js';
+import { blockDays } from './middlewares/blockDays.js';
+import { printDAte } from './middlewares/printDate.Middleware.js';
 
 dotenv.config(); 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(addCurrentDate); 
+app.use(blockDays([5,6], 12, 22)); 
+app.use(printDAte);
 
 app.use("/books", bookRoutes);
 app.use("/users", userRoutes);
