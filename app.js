@@ -3,8 +3,10 @@ import dotenv from "dotenv";
 import bookRoutes from './routes/book.route.js';
 import userRoutes from './routes/user.route.js';
 import {addCurrentDate} from'./middlewares/date.Middleware.js';
-import { blockDays } from './middlewares/blockDays.js';
+import { blockDays } from './middlewares/blockDays.Middleware.js';
 import { printDAte } from './middlewares/printDate.Middleware.js';
+import { notFoundHandler } from './middlewares/errors.Middleware.js';
+import { errorHandler } from './middlewares/errors.Middleware.js';
 
 dotenv.config(); 
 const app = express();
@@ -18,6 +20,8 @@ app.use(printDAte);
 app.use("/books", bookRoutes);
 app.use("/users", userRoutes);
 
+app.use(notFoundHandler); 
+app.use(errorHandler);
 
 app.all("/", (req, res) => {
   res.send("This is my server!");
