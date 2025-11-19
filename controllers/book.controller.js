@@ -64,3 +64,16 @@ export const returnBook = (req, res,next) => {
 
   res.status(200).json({ message: "Book returned successfully", book, user });
 };
+
+export const uploadBookImage = (req, res, next) => {
+  const book = books.find(b => b.id == req.params.id);
+  if (!book) return next({ status: 404, message: "Book not found" });
+  if (!req.file) {
+    return next({ status: 400, message: "No image uploaded" });
+  }
+  book.imageUrl = `/pictures/${req.file.filename}`;
+  res.status(200).json({
+    message: "Image uploaded successfully",
+    imageUrl: book.imageUrl
+  });
+};
