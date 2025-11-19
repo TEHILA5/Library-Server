@@ -1,7 +1,7 @@
 import { books } from "../db_books.js";
 import { users } from "../db_users.js";
 
-export const getAllBooks = (req, res) => {
+export const getAllBooks = (req, res,next) => {
   let results = books;
   const { name, limit = 5, page = 1 } = req.query;
 
@@ -22,19 +22,19 @@ export const getAllBooks = (req, res) => {
   });
 };
  
-export const getBookById = (req, res) => {
+export const getBookById = (req, res,next) => {
   const book = books.find(b => b.id == req.params.id);
   if (!book) next({ status: 404, message: `Book ${req.params.id} not found!` });
   res.status(200).json(book);
 };
  
-export const addBook = (req, res) => {
+export const addBook = (req, res,next) => {
   const newBook = { ...req.body, id: Date.now(), isBorrowed: false, borrows: [] };
   books.push(newBook);
   res.status(201).json(newBook);
 };
  
-export const borrowBook = (req, res) => {
+export const borrowBook = (req, res,next) => {
   const book = books.find(b => b.id == req.params.id);
   if (!book) next({ status: 404, message: `Book ${req.params.id} not found!` });
   if (book.isBorrowed) next({ status: 400, message: `Book ${req.params.id} already borrowed!` });
@@ -50,7 +50,7 @@ export const borrowBook = (req, res) => {
   res.status(200).json({ message: "Book borrowed successfully", book, user });
 };
  
-export const returnBook = (req, res) => {
+export const returnBook = (req, res,next) => {
   const book = books.find(b => b.id == req.params.id);
   if (!book) next({ status: 404, message: `Book ${req.params.id} not found!` });
   if (!book.isBorrowed) next({ status:400, message: `Book ${req.params.id}is not borrowed` });

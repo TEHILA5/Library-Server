@@ -1,11 +1,13 @@
 import express from "express";
 import { getAllUsers, signUp, signIn } from "../controllers/user.controller.js";
+import { joiValidator } from "../middlewares/joi-validator.middleware.js";
+import {userValidation} from '../models/user.model.js'
 const router = express.Router();
 
 router.get("/", getAllUsers);
  
-router.post("/sign-up", signUp);
+router.post("/sign-up", joiValidator(userValidation.signUp), signUp);
  
-router.post("/sign-in", signIn);
+router.post("/sign-in", joiValidator(userValidation.signIn), signIn);
 
 export default router;
