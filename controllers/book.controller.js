@@ -1,79 +1,141 @@
-import { books } from "../db_books.js";
-import { users } from "../db_users.js";
+import { isValidObjectId } from "mongoose";
+import Book from "../models/book.model.js";
 
-export const getAllBooks = (req, res,next) => {
-  let results = books;
-  const { name, limit = 5, page = 1 } = req.query;
+const books = [
+  {
+    id: 1,
+    name: "Duplicatim",
+    category: "Fantasy",
+    price: 80,
+    isBorrowed: false,
+    borrows: [] 
+  },
+  {
+    id: 2,
+    name: "Hitnakshut",
+    category: "Voltage",
+    price: 120,
+    isBorrowed: true,
+    borrows: [{ date: "2025-10-20", userId: 101 },]
+  },
+  {
+    id:3,
+    name:"Gam Ki Elech",
+    category:"Emotion",
+    price:100,
+    isBorrowed:false,
+    borrows:[
+        {date:"2025-09-30",userId:100},
+        {date:"2025-10-25",userId:102},
+    ]
+  },
+];
 
-  if (name) {
-    const search = name.toLowerCase();
-    results = results.filter(b => b.name.toLowerCase().includes(search));
+export const getAllBooks = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 5, name = '' } = req.query;
+
+    const query = name ? { name: new RegExp(name, 'i') } : {};
+
+    const books = await Book.find(query)
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+
+    const total = await Book.countDocuments(query);
+
+    res.json({
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      results: books
+    });
+  } catch (error) {
+    next({ message: error.message });
   }
-
-  const start = (page - 1) * limit;
-  const end = start + Number(limit);
-  const paginated = results.slice(start, end);
-
-  res.status(200).json({
-    total: results.length,
-    page: Number(page),
-    limit: Number(limit),
-    results: paginated
-  });
-};
- 
-export const getBookById = (req, res,next) => {
-  const book = books.find(b => b.id == req.params.id);
-  if (!book) next({ status: 404, message: `Book ${req.params.id} not found!` });
-  res.status(200).json(book);
-};
- 
-export const addBook = (req, res,next) => {
-  const newBook = { ...req.body, id: Date.now(), isBorrowed: false, borrows: [] };
-  books.push(newBook);
-  res.status(201).json(newBook);
-};
- 
-export const borrowBook = (req, res,next) => {
-  const book = books.find(b => b.id == req.params.id);
-  if (!book) next({ status: 404, message: `Book ${req.params.id} not found!` });
-  if (book.isBorrowed) next({ status: 400, message: `Book ${req.params.id} already borrowed!` });
-
-  const { userId } = req.body;
-  const user = users.find(u => u.id == userId);
-  if (!user) next({ status: 404, message: `User ${req.params.id} not found!` });
-
-  book.isBorrowed = true;
-  book.borrows.push({ date: new Date().toISOString(), userId });
-  user.borrowedBooks.push(book.id);
-
-  res.status(200).json({ message: "Book borrowed successfully", book, user });
-};
- 
-export const returnBook = (req, res,next) => {
-  const book = books.find(b => b.id == req.params.id);
-  if (!book) next({ status: 404, message: `Book ${req.params.id} not found!` });
-  if (!book.isBorrowed) next({ status:400, message: `Book ${req.params.id}is not borrowed` });
-
-  const { userId } = req.body;
-  const user = users.find(u => u.id == userId);
-  if (!user) next({ status: 404, message: `User ${req.params.id} not found!` });
-
-  book.isBorrowed = false;
-  user.borrowedBooks = user.borrowedBooks.filter(id => id !== book.id);
-
-  res.status(200).json({ message: "Book returned successfully", book, user });
 };
 
-export const uploadBookImage = (req, res, next) => {
-  const book = books.find(b => b.id == req.params.id);
-  if (!book) return next({ status: 404, message: "Book not found" });
-  if (!req.file) {
-    return next({ status: 400, message: "No image uploaded" });
+export const getBookById = async (req, res, next) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    return next({ status: 404, message: `Book ${id} not found!` });
   }
-  book.imageUrl = `/pictures/${req.file.filename}`;
-  res.status(200).json({
-    message: "Image uploaded successfully",
-    imageUrl: book.imageUrl
-  });
+  try {
+    const book = await Book.findById(id);
+    if (!book) return next({ status: 404, message: `Book ${id} not found!` });
+    res.json(book);
+  } catch (error) {
+    next({ message: error.message });
+  }
+};
+ 
+export const addBook = async (req, res, next) => {
+  try {
+    const newBook = new Book({
+      ...req.body,
+      isBorrowed: false,
+      borrows: [],
+      imageUrl: req.file?.path
+    });
+
+    await newBook.save();
+    res.status(201).json(newBook);
+  } catch (error) {
+    next({ message: error.message });
+  }
+};
+ 
+export const borrowBook = async (req, res, next) => {
+  const { id } = req.params;
+  const { userId } = req.body;
+  if (!isValidObjectId(id)) return next({ status: 404, message: `Book ${id} not found!` });
+  if (!isValidObjectId(userId)) return next({ status: 404, message: `User ${userId} not found!` });
+  try {
+    const book = await Book.findById(id);
+    if (!book) return next({ status: 404, message: `Book ${id} not found!` });
+    if (book.isBorrowed) return next({ status: 400, message: `Book ${id} already borrowed!` });
+    const user = await User.findById(userId);
+    if (!user) return next({ status: 404, message: `User ${userId} not found!` });
+    book.isBorrowed = true;
+    book.borrows.push({ date: new Date().toISOString(), userId });
+    user.borrowedBooks.push(book._id);
+    await book.save();
+    await user.save();
+    res.json({ message: "Book borrowed successfully", book, user });
+  } catch (error) {
+    next({ message: error.message });
+  }
+};
+ 
+export const returnBook = async (req, res, next) => {
+  const { id } = req.params;
+  const { userId } = req.body; 
+  if (!isValidObjectId(id)) return next({ status: 404, message: `Book ${id} not found!` });
+  if (!isValidObjectId(userId)) return next({ status: 404, message: `User ${userId} not found!` });
+  try {
+    const book = await Book.findById(id);
+    if (!book) return next({ status: 404, message: `Book ${id} not found!` });
+    if (!book.isBorrowed) return next({ status: 400, message: `Book ${id} is not borrowed!` }); 
+    const user = await User.findById(userId);
+    if (!user) return next({ status: 404, message: `User ${userId} not found!` }); 
+    book.isBorrowed = false;
+    user.borrowedBooks = user.borrowedBooks.filter(bId => bId.toString() !== book._id.toString()); 
+    await user.save(); 
+    res.json({ message: "Book returned successfully", book, user });
+  } catch (error) {
+    next({ message: error.message });
+  }
+};
+
+export const uploadBookImage = async (req, res, next) => {
+  const { id } = req.params;
+  if (!req.file) return next({ status: 400, message: "No image uploaded" }); 
+  try {
+    const book = await Book.findById(id);
+    if (!book) return next({ status: 404, message: "Book not found" }); 
+    book.imageUrl = `/pictures/${req.file.filename}`;
+    await book.save(); 
+    res.json({ message: "Image uploaded successfully", imageUrl: book.imageUrl });
+  } catch (error) {
+    next({ message: error.message });
+  }
 };
