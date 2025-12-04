@@ -3,8 +3,8 @@ import { model, Schema, SchemaType } from "mongoose";
  
 export const validateBook = {
   addBook: Joi.object({
-    name: Joi.string().min(1).required(),
-    category: Joi.string().required(),
+    name: Joi.string().min(2).max(20).required(),
+    category: Joi.string().valid("Fantasy","Voltage","Emotion").required(),
     price: Joi.number().required()
   }),
   borrowBook: Joi.object({
@@ -27,6 +27,4 @@ const bookSchema = new Schema({
     }
 });
 
-const Book = model('Book', bookSchema);
-
-export default Book;
+export const Book = model('Book', bookSchema); 

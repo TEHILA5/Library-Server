@@ -1,5 +1,5 @@
 import { isValidObjectId } from "mongoose";
-import Book from "../models/book.model.js";
+import {Book} from "../models/book.model.js";
 
 const books = [
   {
