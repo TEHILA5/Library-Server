@@ -19,7 +19,7 @@ const bookSchema = new Schema({
     name: { type: String, unique: true },
     price: Number,
     img: String,
-    categories: [String], 
+    category: [String], 
     author: { 
         _id: Schema.Types.ObjectId,
         name: String,

@@ -83,6 +83,24 @@ export const addBook = async (req, res, next) => {
     next({ message: error.message });
   }
 };
+
+export const updateBook = async (req, res, next) => {
+  const { id } = req.params;  
+  try {
+    const updatedBook = await Book.findByIdAndUpdate(
+      id,
+      { $set: req.body },  
+      { new: true, runValidators: true }  
+    );
+    if (!updatedBook) {
+      return next({ status: 404, message: `Book ${id} not found!` });
+    }
+    res.json({ message: "Book updated successfully", book: updatedBook });
+  } catch (error) {
+    next({ message: error.message });
+  }
+};
+
  
 export const borrowBook = async (req, res, next) => {
   const { id } = req.params;
@@ -135,6 +153,26 @@ export const uploadBookImage = async (req, res, next) => {
     book.imageUrl = `/pictures/${req.file.filename}`;
     await book.save(); 
     res.json({ message: "Image uploaded successfully", imageUrl: book.imageUrl });
+  } catch (error) {
+    next({ message: error.message });
+  }
+};
+
+export const getBooksByCategory = async (req, res, next) => {
+  const { category } = req.params; 
+  if (!category) {
+    return next({ status: 400, message: "Category parameter is required" });
+  }
+  try { 
+    const books = await Book.find({ category: new RegExp(`^${category}$`, 'i') });
+    if (books.length === 0) {
+      return res.status(200).json({ message: `No books found in category ${category}`, results: [] });
+    }
+    res.json({
+      total: books.length,
+      category,
+      results: books
+    });
   } catch (error) {
     next({ message: error.message });
   }
