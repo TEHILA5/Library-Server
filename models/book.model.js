@@ -24,7 +24,19 @@ const bookSchema = new Schema({
         _id: Schema.Types.ObjectId,
         name: String,
         email: String,
+    },
+    isBorrowed: { type: Boolean, default: false },
+    currentBorrow: { 
+    userId: { type: Schema.Types.ObjectId, ref: "User" },
+    dueDate: Date
+    },
+    borrowsHistory: [ 
+    {
+      userId: { type: Schema.Types.ObjectId, ref: "User" },
+      borrowedAt: { type: Date, default: Date.now },
+      returnedAt: Date
     }
+    ]
 });
 
 export const Book = model('Book', bookSchema); 

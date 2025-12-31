@@ -59,10 +59,11 @@ const userSchema = new Schema({
     type: Date, 
     default: Date.now 
   },
-  borrowedBooks: [
+  borrowedBooks: [ 
     {
-      code: { type: String, required: true },
-      name: { type: String, required: true }
+      bookId: { type: Schema.Types.ObjectId, ref: "Book", required: true },
+      bookName: { type: String, required: true },
+      dueDate: { type: Date, required: true }
     }
   ]
 });
