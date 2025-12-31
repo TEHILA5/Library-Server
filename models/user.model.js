@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { model, Schema, SchemaType } from "mongoose";
 
 export const userValidation = {
   signUp: Joi.object({
@@ -22,3 +23,43 @@ export const userValidation = {
     courseName: Joi.string().min(2).required()
   })
 };
+
+const israel = /^(\+972|0)([2-9]{1})([0-9]{7})$/;
+
+const userSchema = new Schema({
+  name: { type: String, required: true },
+  email: { 
+    type: String, 
+    required: true, 
+    unique: true, 
+    lowercase: true, 
+    trim: true
+  },
+  phone: { 
+    type: String, 
+    validate: {
+      validator: function(v) {
+        return israel.test(v);
+      },
+      message: props => `${props.value} The phone number is invalid!`
+    },
+    required: [true]
+  },
+  password: { 
+    type: String, 
+    required: true, 
+    minlength: [4] 
+  },
+  registrationDate: { 
+    type: Date, 
+    default: Date.now 
+  },
+  borrowedBooks: [
+    {
+      code: { type: String, required: true },
+      name: { type: String, required: true }
+    }
+  ]
+});
+
+export const User =model('User', userSchema); 
