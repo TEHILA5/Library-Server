@@ -1,5 +1,6 @@
 import Joi from 'joi';
 import { model, Schema, SchemaType } from "mongoose";
+import bcrypt from "bcrypt";
 
 export const userValidation = {
     signUp: Joi.object({
@@ -66,6 +67,18 @@ const userSchema = new Schema({
       dueDate: { type: Date, required: true }
     }
   ]
+});
+
+userSchema.pre("save", async function(next) {
+  if (!this.isModified("password")) return next(); 
+  try {
+    const saltRounds = 12;
+    const hashed = await bcrypt.hash(this.password, saltRounds);
+    this.password = hashed;
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 export const User =model('User', userSchema); 
