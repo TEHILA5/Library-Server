@@ -1,5 +1,5 @@
 import express from "express";
-import { getAllUsers, signUp, signIn, updateUser, addCourse} from "../controllers/user.controller.js";
+import { getAllUsers, signUp, signIn, updateUser} from "../controllers/user.controller.js";
 import { joiValidator } from "../middlewares/joi-validator.middleware.js";
 import {userValidation} from '../models/user.model.js'
 const router = express.Router();
@@ -12,6 +12,6 @@ router.post("/sign-in", joiValidator(userValidation.signIn), signIn);
 
 router.patch("/:id", joiValidator(userValidation.updateUser), updateUser);
 
-router.post("/:id/courses", joiValidator(userValidation.addCourse), addCourse);
+//router.post("/:id/courses", joiValidator(userValidation.addCourse), addCourse);
 
 export default router;

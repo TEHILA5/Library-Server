@@ -1,23 +1,25 @@
-import { isValidObjectId } from "mongoose";
+import { isValidObjectId, model, Schema, SchemaType } from "mongoose";
 import {User} from "../models/user.model.js";
+import bcrypt from "bcryptjs";
+
 
 export const getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find(); 
     res.status(200).json(users);
   } catch (error) {
-    next({ sstatus: 500,message: error.message });
+    next({ status: 500,message: error.message });
   }
 };
 
 export const signUp = async (req, res, next) => {
   try {
-    const { name, email, phone, password } = req.body;
+    const { username, email, phone, password } = req.body;
     const user = await User.findOne({ email: email.toLowerCase() });
     if (user) return next({ status: 400, message: "Email already in use" });
 
     const newUser = new User({
-      name,
+      username,
       email,
       phone,
       password,
@@ -25,36 +27,64 @@ export const signUp = async (req, res, next) => {
     });
 
     await newUser.save();
+    newUser.password = undefined; 
     res.status(201).json(newUser);
-  } catch (error) {
+  } 
+  catch (error) {
     next({ status: 500,message: error.message });
   }
 };
 
 
-export const signIn = async (req, res, next) => {
+export const signIn =async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email: email.toLowerCase(), password });
-    if (!user) return next({ status: 401, message: "Invalid user!" });
 
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return next({ status: 401, message: "Invalid email or password" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return next({ status: 401, message: "Invalid email or password" });
+    }
+    user.password = undefined; 
     res.status(200).json({ message: "Signed in successfully", user });
   } catch (error) {
-    next({ status: 500,message: error.message });
+    next({ status: 500, message: error.message });
   }
 };
 
-export const updateUser = (req, res, next) => {
-  const user = users.find(u => u.id == req.params.id);
-  if (!user) next({ status: 404, message: `User not found` }); 
-  Object.assign(user, req.body); 
-  res.status(200).json({ message: "User updated", user });
+export const updateUser = async (req, res, next) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    return next({ status: 400, message: "Invalid user id" });
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return next({ status: 404, message: "User not found" });
+    }
+
+    res.status(200).json({ message: "User updated", user });
+  } catch (error) {
+    next({ status: 500, message: error.message });
+  }
 };
 
-export const addCourse = (req, res, next) => {
-  const user = users.find(u => u.id == req.params.id);
-  if (!user) return next({ status: 404, message: `User not found` }); 
-  if (!user.courses) user.courses = []; 
-  user.courses.push(req.body.courseName); 
-  res.status(200).json({ message: "Course added", user });
-};
+
+//export const addCourse = (req, res, next) => {
+//  const user = users.find(u => u.id == req.params.id);
+//  if (!user) return next({ status: 404, message: `User not found` }); 
+//  if (!user.courses) user.courses = []; 
+//  user.courses.push(req.body.courseName); 
+//  res.status(200).json({ message: "Course added", user });
+//};

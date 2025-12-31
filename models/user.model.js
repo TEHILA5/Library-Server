@@ -1,23 +1,30 @@
 import Joi from 'joi';
 import { model, Schema, SchemaType } from "mongoose";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
+
+
+
+const israel = /^(?:\+972|0)5[0-9]{8}$/;
+
 
 export const userValidation = {
     signUp: Joi.object({
     username: Joi.string().min(3).max(30).required(),
     email: Joi.string().email().required(),
-    phone: Joi.string().pattern(israelPhone).required(),
+    phone: Joi.string().pattern(israel).required(),
     password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{4,30}$')).required(),
-    repeat_password: Joi.ref('password'),
+    repeat_password: Joi.string()
+   .valid(Joi.ref('password'))
+   .required(),
   }),
   signIn: Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{4,30}$')).required(),
   }),
   updateUser: Joi.object({
-    name: Joi.string().min(3).max(30),
+    username: Joi.string().min(3).max(30),
     email: Joi.string().email(),
-    phone: Joi.string().pattern(israelPhone),
+    phone: Joi.string().pattern(israel),
     password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{4,30}$')).required(),
   }),
   addBorrowedBook: Joi.object({
@@ -29,8 +36,6 @@ export const userValidation = {
     courseName: Joi.string().min(2).required()
   })
 };
-
-const israel = /^(\+972|0)([2-9]{1})([0-9]{7})$/;
 
 const userSchema = new Schema({
   username: { type: String, required: true },
@@ -69,16 +74,14 @@ const userSchema = new Schema({
   ]
 });
 
-userSchema.pre("save", async function(next) {
-  if (!this.isModified("password")) return next(); 
-  try {
-    const saltRounds = 12;
-    const hashed = await bcrypt.hash(this.password, saltRounds);
-    this.password = hashed;
-    next();
-  } catch (err) {
-    next(err);
-  }
+userSchema.pre("save", async function () {
+
+  if (!this.isModified("password")) return;
+
+  const saltRounds = 12;
+  const hashed = await bcrypt.hash(this.password, saltRounds);
+  this.password = hashed;
 });
+
 
 export const User =model('User', userSchema); 
