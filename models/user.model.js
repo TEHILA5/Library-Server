@@ -2,21 +2,26 @@ import Joi from 'joi';
 import { model, Schema, SchemaType } from "mongoose";
 
 export const userValidation = {
-  signUp: Joi.object({
-  id: Joi.number().required(),
-  username: Joi.string().min(3).max(30).required(),
-  email: Joi.string().email().required(),
-  password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
-  repeat_password: Joi.ref('password'),
+    signUp: Joi.object({
+    username: Joi.string().min(3).max(30).required(),
+    email: Joi.string().email().required(),
+    phone: Joi.string().pattern(israelPhone).required(),
+    password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{4,30}$')).required(),
+    repeat_password: Joi.ref('password'),
   }),
   signIn: Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required()
+    email: Joi.string().email().required(),
+    password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{4,30}$')).required(),
   }),
   updateUser: Joi.object({
-    username: Joi.string().min(3).max(30),
+    name: Joi.string().min(3).max(30),
     email: Joi.string().email(),
-    password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'))
+    phone: Joi.string().pattern(israelPhone),
+    password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{4,30}$')).required(),
+  }),
+  addBorrowedBook: Joi.object({
+    code: Joi.string().required(),
+    name: Joi.string().required()
   }),
 
   addCourse: Joi.object({
@@ -27,7 +32,7 @@ export const userValidation = {
 const israel = /^(\+972|0)([2-9]{1})([0-9]{7})$/;
 
 const userSchema = new Schema({
-  name: { type: String, required: true },
+  username: { type: String, required: true },
   email: { 
     type: String, 
     required: true, 
