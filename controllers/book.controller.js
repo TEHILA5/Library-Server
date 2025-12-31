@@ -50,7 +50,7 @@ export const getAllBooks = async (req, res, next) => {
       results: books
     });
   } catch (error) {
-    next({ message: error.message });
+    next({ status: 500,message: error.message });
   }
 };
 
@@ -64,7 +64,7 @@ export const getBookById = async (req, res, next) => {
     if (!book) return next({ status: 404, message: `Book ${id} not found!` });
     res.json(book);
   } catch (error) {
-    next({ message: error.message });
+    next({ status: 500,message: error.message });
   }
 };
  
@@ -80,7 +80,7 @@ export const addBook = async (req, res, next) => {
     await newBook.save();
     res.status(201).json(newBook);
   } catch (error) {
-    next({ message: error.message });
+    next({ status: 500,message: error.message });
   }
 };
 
@@ -97,7 +97,7 @@ export const updateBook = async (req, res, next) => {
     }
     res.json({ message: "Book updated successfully", book: updatedBook });
   } catch (error) {
-    next({ message: error.message });
+    next({ status: 500,message: error.message });
   }
 };
 
@@ -120,7 +120,7 @@ export const borrowBook = async (req, res, next) => {
     await user.save();
     res.json({ message: "Book borrowed successfully", book, user });
   } catch (error) {
-    next({ message: error.message });
+    next({ status: 500,message: error.message });
   }
 };
  
@@ -140,7 +140,7 @@ export const returnBook = async (req, res, next) => {
     await user.save(); 
     res.json({ message: "Book returned successfully", book, user });
   } catch (error) {
-    next({ message: error.message });
+    next({ status: 500,message: error.message });
   }
 };
 
@@ -154,7 +154,7 @@ export const uploadBookImage = async (req, res, next) => {
     await book.save(); 
     res.json({ message: "Image uploaded successfully", imageUrl: book.imageUrl });
   } catch (error) {
-    next({ message: error.message });
+    next({ status: 500,message: error.message });
   }
 };
 
@@ -174,6 +174,6 @@ export const getBooksByCategory = async (req, res, next) => {
       results: books
     });
   } catch (error) {
-    next({ message: error.message });
+    next({ status: 500,message: error.message });
   }
 };

@@ -1,21 +1,47 @@
-import { users } from "../db_users.js";
+import { isValidObjectId } from "mongoose";
+import {Book} from "../models/user.model.js";
 
-export const getAllUsers = (req, res,next) => {
-  res.status(200).json(users);
+export const getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.find(); 
+    res.status(200).json(users);
+  } catch (error) {
+    next({ sstatus: 500,message: error.message });
+  }
 };
 
-export const signUp = (req, res,next) => {
-  const {id, username, email, password } = req.body;  
-  const newUser = { id, username, email, password, borrowedBooks: [] };
-  users.push(newUser);
-  res.status(201).json(newUser);
+export const signUp = async (req, res, next) => {
+  try {
+    const { name, email, phone, password } = req.body;
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (user) return next({ status: 400, message: "Email already in use" });
+
+    const newUser = new User({
+      name,
+      email,
+      phone,
+      password,
+      borrowedBooks: []
+    });
+
+    await newUser.save();
+    res.status(201).json(newUser);
+  } catch (error) {
+    next({ status: 500,message: error.message });
+  }
 };
 
-export const signIn = (req, res,next) => {
-  const { email, password } = req.body;
-  const user = users.find(u => u.email === email && u.password === password);
-  if (!user) next({ status: 401, message: `Invalid credentials!` });  
-  res.status(200).json({ message: "Signed in successfully", user });
+
+export const signIn = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email: email.toLowerCase(), password });
+    if (!user) return next({ status: 401, message: "Invalid user!" });
+
+    res.status(200).json({ message: "Signed in successfully", user });
+  } catch (error) {
+    next({ status: 500,message: error.message });
+  }
 };
 
 export const updateUser = (req, res, next) => {
