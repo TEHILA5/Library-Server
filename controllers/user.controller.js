@@ -16,7 +16,7 @@ export const signUp = async (req, res, next) => {
   try {
     const { username, email, phone, password } = req.body;
     const user = await User.findOne({ email: email.toLowerCase() });
-    if (user) return next({ status: 400, message: "Email already in use" });
+    if (user) return next({ status: 409, message: "Email already in use" });
 
     const newUser = new User({
       username,
@@ -26,8 +26,7 @@ export const signUp = async (req, res, next) => {
       borrowedBooks: []
     });
 
-    await newUser.save();
-    newUser.password = undefined; 
+    await newUser.save(); 
     res.status(201).json(newUser);
   } 
   catch (error) {
@@ -45,11 +44,10 @@ export const signIn =async (req, res, next) => {
       return next({ status: 401, message: "Invalid email or password" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await user.comparePasswords(password);
     if (!isMatch) {
       return next({ status: 401, message: "Invalid email or password" });
-    }
-    user.password = undefined; 
+    } 
     res.status(200).json({ message: "Signed in successfully", user });
   } catch (error) {
     next({ status: 500, message: error.message });

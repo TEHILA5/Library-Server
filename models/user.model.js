@@ -83,5 +83,16 @@ userSchema.pre("save", async function () {
   this.password = hashed;
 });
 
+userSchema.methods.comparePasswords = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+userSchema.set('toJSON', {
+  transform(doc, converted) {
+    delete converted.__v;
+    delete converted._id;
+    delete converted.password;
+  }
+});
 
 export const User =model('User', userSchema); 
