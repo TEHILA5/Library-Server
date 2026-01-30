@@ -12,19 +12,19 @@ A comprehensive backend system for managing a library, including user authentica
 ## ⚙️ Environment Variables
 To run this project, you will need to create a `.env` file in your root directory and add the following variables:
 
-```env
+### env
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_secret_key
 
 ## Users Endpoints
 
-|| Method || URL || Description || Permissions || Body || Headers || Returns || Status Codes ||
-||--------||-----||-------------||-------------||------||---------||---------||--------------||
-|| GET || /users || Get all users || Admin || - || Authorization: Bearer <token> || Array of users || 200, 401, 500 ||
-|| POST || /users/sign-up || Register new user || Public || username, email, phone, password, repeat_password, role || - || Created user + token || 201, 409, 500 ||
-|| POST || /users/sign-in || Login user || Public || email, password || - || JWT token || 200, 403, 500 ||
-|| PATCH || /users/update || Update user info || Owner || username?, email?, phone?, password? || Authorization: Bearer <token> || Updated user || 200, 400, 404, 500 ||
+| Method | URL            | Description       | Permissions | Body                                                    | Headers                       | Returns              | Status Codes    |
+| ------ | -------------- | ----------------- | ----------- | ------------------------------------------------------- | ----------------------------- | -------------------- | -------------------- |
+| GET    | /users         | Get all users     | Admin       | -                                                       | Authorization: Bearer <token> | Array of users       | 200, 401, 500      |
+| POST   | /users/sign-up | Register new user | Public      | username, email, phone, password, repeat_password, role | -                             | Created user + token | 201, 409, 500      |
+| POST   | /users/sign-in | Login user        | Public      | email, password                                         | -                             | JWT token            | 200, 403, 500      |
+| PATCH  | /users/update  | Update user info  | Owner       | username?, email?, phone?, password?                    | Authorization: Bearer <token> || Updated user        | 200, 400, 404, 500 |
 
 ## Books Endpoints
 
