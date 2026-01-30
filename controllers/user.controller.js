@@ -1,6 +1,6 @@
-import { isValidObjectId, model, Schema, SchemaType } from "mongoose";
-import {User} from "../models/user.model.js";
+import { isValidObjectId, model, Schema, SchemaType } from "mongoose"; 
 import bcrypt from "bcryptjs";
+import {User,  generateToken } from "../models/user.model.js";
 
 
 export const getAllUsers = async (req, res, next) => {
@@ -14,7 +14,7 @@ export const getAllUsers = async (req, res, next) => {
 
 export const signUp = async (req, res, next) => {
   try {
-    const { username, email, phone, password } = req.body;
+    const { username, email, phone, password, role } = req.body;
     const user = await User.findOne({ email: email.toLowerCase() });
     if (user) return next({ status: 409, message: "Email already in use" });
 
@@ -23,11 +23,16 @@ export const signUp = async (req, res, next) => {
       email,
       phone,
       password,
+      role: role || 'user',
       borrowedBooks: []
     });
 
     await newUser.save(); 
-    res.status(201).json(newUser);
+    const token = generateToken({ user_id: newUser._id, role: newUser.role });
+    res.status(201).json({ 
+      user: newUser, 
+      token 
+    });
   } 
   catch (error) {
     next({ status: 500,message: error.message });
@@ -41,27 +46,33 @@ export const signIn =async (req, res, next) => {
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return next({ status: 401, message: "Invalid email or password" });
+      return next({ status: 403, message: `Authentication failed` });
     }
 
     const isMatch = await user.comparePasswords(password);
     if (!isMatch) {
-      return next({ status: 401, message: "Invalid email or password" });
+      return next({ status: 403, message: `Authentication failed` });
     } 
-    res.status(200).json({ message: "Signed in successfully", user });
+    
+    const token = generateToken({ user_id: user._id, role: user.role })
+    return res.json({ token: token });
+
   } catch (error) {
-    next({ status: 500, message: error.message });
+    next({ status: 403, message: `Authentication failed` });
   }
 };
 
 export const updateUser = async (req, res, next) => {
-  const { id } = req.params;
-
+  const id = req.currentUser.user_id;
+  const userEmail = req.currentUser.email;
   if (!isValidObjectId(id)) {
     return next({ status: 400, message: "Invalid user id" });
   }
 
   try {
+    if (req.body.password) {
+    req.body.password = await bcrypt.hash(req.body.password, 12);
+    }
     const user = await User.findByIdAndUpdate(
       id,
       { $set: req.body },

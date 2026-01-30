@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { model, Schema, SchemaType } from "mongoose";
 import bcrypt from "bcryptjs";
-
+import jwt from 'jsonwebtoken';
 
 
 const israel = /^(?:\+972|0)5[0-9]{8}$/;
@@ -16,6 +16,7 @@ export const userValidation = {
     repeat_password: Joi.string()
    .valid(Joi.ref('password'))
    .required(),
+   role: Joi.string().valid('admin', 'user').default('user'),
   }),
   signIn: Joi.object({
     email: Joi.string().email().required(),
@@ -33,8 +34,15 @@ export const userValidation = {
   }),
 
   addCourse: Joi.object({
-    courseName: Joi.string().min(2).required()
+    courseName: Joi.string().min(2)
   })
+};
+
+export const generateToken = ({ user_id, role }) => {
+    const userPayload = { user_id, role };
+    const secretKey = process.env.JWT_SECRET ?? 'secretKey55555';
+    const token = jwt.sign(userPayload, secretKey, { expiresIn: '5m' });
+    return token;
 };
 
 const userSchema = new Schema({
@@ -61,6 +69,7 @@ const userSchema = new Schema({
     required: true, 
     minlength: [4] 
   },
+  role: { type: String, enum: ['admin', 'user'], default: 'user' },  
   registrationDate: { 
     type: Date, 
     default: Date.now 
