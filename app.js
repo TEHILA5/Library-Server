@@ -27,12 +27,12 @@ app.use(printDAte);
 app.use("/books", bookRoutes);
 app.use("/users", userRoutes);
 
-app.use(notFoundHandler); 
-app.use(errorHandler);
-
 app.all("/", (req, res) => {
   res.send("This is my server!");
 });
+
+app.use(notFoundHandler); 
+app.use(errorHandler);
 
 
 const port = process.env.PORT||3000;
