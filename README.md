@@ -15,7 +15,7 @@ To run this project, you will need to create a `.env` file in your root director
 ```env
 PORT=5000
 MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key``` 
+JWT_SECRET=your_secret_key
 
 ## Users Endpoints
 
